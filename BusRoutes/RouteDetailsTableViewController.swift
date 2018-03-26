@@ -17,6 +17,7 @@ class RouteDetailsTableViewController: UITableViewController {
     var routeIndex: Int?
     let line = UIImage(named: "verticalLineIcon")
     let dot = UIImage(named: "dotIcon")
+    var lastLine:UIImageView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,14 +41,25 @@ class RouteDetailsTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cellIdentifier = "StopDetailCell"
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
-        cell.textLabel?.text = route?.stops[indexPath.row]
+        // let cellIdentifier = "StopDetailCell"
+        let cellIdentifier = "StopDetailViewCell"
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? StopDetailViewCell else {
+            fatalError("The dequeued cell is not an instance of StopDetailViewCell.")
+        }
+        cell.stopNameLabel.text = route?.stops[indexPath.row]
         let backgroundImage = UIColor.groupTableViewBackground.image(CGSize(width: 45, height: 45))
-        cell.imageView?.image = backgroundImage
-        cell.imageView?.addSubview(getStopImage(index: indexPath.row))
-        
+        cell.stopImage.image = backgroundImage
+        cell.stopImage.addSubview(getStopImage(index: indexPath.row))
+
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        // let cellIdentifier = "StopDetailCell"
+        if indexPath.row == (route?.stops.count)! - 1 {
+            // This is the last row, remove the line
+            lastLine?.removeFromSuperview()
+        }
     }
     
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -94,40 +106,28 @@ class RouteDetailsTableViewController: UITableViewController {
     
     //MARK: Private Methods
     private func getStopImage(index: Int) -> UIImageView {
-        // TODO: Replace with a custom cell implementation
-        let line = UIImage(named: "verticalLineIcon")
-        let lineImageView = UIImageView(image: line)
-        let lineWidth = 5.0
-        let lineHeight = 43.5 * 3
-        let lineX = 19.50
-        let lineY = -43.5
-        lineImageView.frame = CGRect(x: lineX, y:lineY, width:lineWidth, height: lineHeight)
-        
         let dot = UIImage(named: "dotIcon")
         let dotImageView = UIImageView(image: dot)
+        let dotX = 19.50
+        let dotY = -10.0
         let dotWidth = 20.0
         let dotHeight = 40.0
-        let dotX = -((dotWidth / 2.0) - (lineWidth / 2.0))
-        var dotY = -(lineY + ((43.5 - dotHeight) / 2.0))   //49.25
+        dotImageView.frame = CGRect(x: dotX, y:dotY, width:dotWidth, height: dotHeight)
         
-        if index == 0 {
-            // For top stop
-            dotY = -lineY - ((dotHeight - dotWidth) / 2.0)
-            os_log("Top: Dot Y is ", dotY)
-        } else if index == ((route?.stops.count)! - 1){
-            dotY = -(2 * lineY) - (dotHeight - (dotWidth / 2.0))
-            os_log("Bottom: Dot Y is ", dotY)
-        } else {
-            // For centre stop
-            dotY = -(1.5 * lineY) - (dotHeight / 2.0)
-            os_log("Centre: Dot Y is ", dotY)
-        }
+        let line = UIImage(named: "verticalLineIcon")
+        let lineImageView = UIImageView(image: line)
+        lastLine = lineImageView
+        let lineWidth = 5.0
+        let lineHeight = 43.5 * 2
+        let lineX = ((dotWidth / 2.0) - (lineWidth / 2.0))
+        let lineY = dotY
+        lineImageView.frame = CGRect(x: lineX, y:lineY, width:lineWidth, height: lineHeight)
         
-        dotImageView.frame = CGRect(x: dotX, y: dotY, width: dotWidth, height:dotHeight)
-        // Add the dot on top of line
-        lineImageView.addSubview(dotImageView)
+        // Add the line
+        dotImageView.addSubview(lineImageView)
+        
        
-        return lineImageView
+        return dotImageView
     }
 
 }
